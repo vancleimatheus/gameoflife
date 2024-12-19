@@ -1,6 +1,5 @@
 using GameOfLifeAPI.Models;
 using GameOfLifeAPI.Repository;
-using System.Text;
 
 namespace GameOfLifeAPI.Services;
 
@@ -58,6 +57,7 @@ public class BoardService(
         return board;
     }
 
+    //Boards should have all rows with the same size and at least 2
     private static bool IsValid(string boardContent)
     {
         var rows = boardContent.Split('|');
