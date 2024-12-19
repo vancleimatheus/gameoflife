@@ -24,24 +24,14 @@ public class BoardService(IRepository repository, ILogger<BoardService> logger) 
         return boardToSave;
     }
 
+    //Board is valid if all rows have the same length and has more than 1 rows
     private static bool IsBoardValid(string board)
     {
-        string[] rows = board.Split("|");
-
-        //Board has to have at least 2 rows
-        if (rows.Length < 2)
-            return false;
-
-        int firstRowLength = rows[0].Length;
-
-        //All rows should have the same size
-        return !rows.Any(r => r.Length != firstRowLength);
+        var rows = board.Split('|');
+        return rows.Length >= 2 && rows.All(row => row.Length == rows[0].Length);
     }
 
-    public async Task<IBoard?> GetBoard(Guid boardId)
-    {
-        return await repository.GetBoardByIdAsync(boardId);
-    }
+    public async Task<IBoard?> GetBoard(Guid boardId) => await repository.GetBoardByIdAsync(boardId);
 
     public async Task<IBoard?> ProcessNextGeneration(Guid id, int iterations, bool finalState)
     {
@@ -58,7 +48,7 @@ public class BoardService(IRepository repository, ILogger<BoardService> logger) 
         {
             currentState = board.Content;
 
-            GetNextGen(memoryBoard);
+            GetNextState(memoryBoard);
             board.Content = ConvertBoardToString(memoryBoard);
 
             if (finalState && currentState == board.Content)
@@ -78,7 +68,7 @@ public class BoardService(IRepository repository, ILogger<BoardService> logger) 
 
     }
 
-    private void GetNextGen(List<List<Cell>> memoryBoard)
+    private void GetNextState(List<List<Cell>> memoryBoard)
     {
         var cells = memoryBoard.SelectMany(row => row).ToList();
 
@@ -86,63 +76,30 @@ public class BoardService(IRepository repository, ILogger<BoardService> logger) 
         cells.ForEach(cell => cell.CommitState());
     }
 
-    private static string ConvertBoardToString(List<List<Cell>> memoryBoard)
-    {
-        var sbContent = new StringBuilder();
-
-        foreach (var row in memoryBoard)
-        {
-            sbContent.Append(string.Join("", row.Select(cell => cell.State ? "*" : "-")));
-            sbContent.Append('|');
-        }
-
-        // Remove the last redundant '|'
-        if (sbContent.Length > 0)
-            sbContent.Length--;
-
-        return sbContent.ToString();
-    }
+    private static string ConvertBoardToString(List<List<Cell>> memoryBoard) =>
+        string.Join("|", memoryBoard.Select(row =>
+            string.Concat(row.Select(cell => cell.State ? "*" : "-"))));
 
     private List<List<Cell>> ConvertToMemoryList(string board)
     {
-        List<List<Cell>> referencedBoard = [];
+        var rows = board.Split('|').Select(CreateCellsFromString).ToList();
 
-        string[] rows = board.Split("|");
+        for (int i = 1; i < rows.Count; i++)
+            LinkRows(rows[i - 1], rows[i]);
 
-        foreach (string row in rows)
-        {
-            referencedBoard.Add(CreateCellsFromString(row));
-        }
-
-        //link everything
-        for (int i = 1; i < referencedBoard.Count; i++)
-        {
-            List<Cell> currentRow = referencedBoard[i];
-            List<Cell> previousRow = referencedBoard[i - 1];
-
-            for (int j = 0; j < currentRow.Count; j++)
-            {
-                linkCells(currentRow[j], previousRow[j]);
-
-                if (j > 0)
-                {
-                    linkCells(currentRow[j], previousRow[j - 1]);
-                }
-
-                if (j < currentRow.Count - 1)
-                {
-                    linkCells(currentRow[j], previousRow[j + 1]);
-                }
-            }
-        }
-
-        return referencedBoard;
+        return rows;
     }
 
-    private void linkCells(Cell firstCell, Cell secondCell)
+    private static void LinkRows(List<Cell> previousRow, List<Cell> currentRow)
     {
-        firstCell.Neighbours.Add(secondCell);
-        secondCell.Neighbours.Add(firstCell);
+        for (int j = 0; j < currentRow.Count; j++)
+        {
+            currentRow[j].Link(previousRow[j]);
+            //LinkCells(currentRow[j], previousRow[j]);
+
+            if (j > 0) currentRow[j].Link(previousRow[j - 1]);
+            if (j < currentRow.Count - 1) currentRow[j].Link(previousRow[j + 1]);
+        }
     }
 
     private List<Cell> CreateCellsFromString(string row)
@@ -193,8 +150,12 @@ internal class Cell(bool initialState)
         //If none of those previous conditions were met state remains unchanged
     }
 
-    public void CommitState()
+    public void Link(Cell neighbour)
     {
-        OldState = State;
+        Neighbours.Add(neighbour);
+        neighbour.Neighbours.Add(this);
     }
+
+    public void CommitState() => OldState = State;
+    
 }
