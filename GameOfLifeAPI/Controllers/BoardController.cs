@@ -18,14 +18,19 @@ public class BoardController(IBoardService boardService, ILogger<BoardController
     [HttpGet]
     public async Task<IActionResult> Get(Guid id)
     {
+        logger.LogInformation("GET method called for BoardController", id);
+
         if (!ValidId(id))
+        {
+            logger.LogInformation("Bad request, invalid id", id);
             return BadRequest("Please enter a valid id");
+        }
 
         IBoard? board = await boardService.GetBoardAsync(id);
 
         return board != null
             ? Ok(mapper.Map<BoardDTO>(board))
-            : BadRequest("Board is invalid, please use | (pipe) to split rows and make all the rows the same size.");
+            : NotFound();
 
     }
 
@@ -39,16 +44,27 @@ public class BoardController(IBoardService boardService, ILogger<BoardController
     [HttpPut(Name = nameof(ProcessNextGeneration))]
     public async Task<IActionResult> ProcessNextGeneration(Guid id, int iterations = 1, bool finalState = false)
     {
-        if (!ValidId(id))
-            return BadRequest("Please enter a valid id");
+        logger.LogInformation("PUT method called for BoardController", id, iterations, finalState);
 
-        if (iterations < 0)
+        if (!ValidId(id))
+        {
+            logger.LogInformation("Bad request, invalid id", id);
+            return BadRequest("Please enter a valid id");
+        }
+
+        if (iterations < 1)
+        {
+            logger.LogInformation("Bad request, iterations are 0 or negative", id);
             return BadRequest();
+        }
 
         var processedBoard = await boardService.ProcessNextGenerationAsync(id, iterations, finalState);
 
         if (processedBoard == null)
+        {
+            logger.LogInformation("UnprocessableEntity, board doesn't have a final state", id);
             return new UnprocessableEntityObjectResult($"The board didn't reach a final state in {iterations} iterations and was not updated.");
+        }
 
         return Ok(mapper.Map<BoardDTO>(processedBoard));
     }
@@ -68,10 +84,18 @@ public class BoardController(IBoardService boardService, ILogger<BoardController
     [HttpPost]
     public async Task<IActionResult> Post(string board)
     {
+        logger.LogInformation("POST method called for BoardController", board);
+
         if (string.IsNullOrWhiteSpace(board))
+        {
+            logger.LogInformation("Bad request, empty board", board);
             return BadRequest("No board was provided");
+        }
 
         IBoard? savedBoard = await boardService.SaveBoardAsync(board);
+
+        if (savedBoard == null)
+            logger.LogInformation("Bad request, board malformed");
 
         return savedBoard != null
             ? Ok(mapper.Map<BoardDTO>(savedBoard))
