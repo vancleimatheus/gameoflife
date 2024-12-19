@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "mongodb1": {
+      "containerPorts": "27017:27017",
+      "secretStore": "LocalSecretsFile",
+      "containerName": "test-mongo",
+      "containerImage": "mongo:latest",
+      "type": "mongodb.container",
+      "connectionId": "local",
+      "dynamicId": null
+    }
+  }
+}

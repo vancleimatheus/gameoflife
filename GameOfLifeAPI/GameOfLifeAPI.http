@@ -1,0 +1,6 @@
+@GameOfLifeAPI_HostAddress = http://localhost:5283
+
+GET {{GameOfLifeAPI_HostAddress}}/board/
+Accept: application/json
+
+###
