@@ -23,8 +23,9 @@ builder.Services.AddSwaggerGen((c =>
 }));
 
 builder.Services
-    .AddSingleton<IRepository, MongoRepository>()
-    .AddSingleton<IBoardService, BoardService>();
+    .AddSingleton<IBoardRepository, BoardRepository>()
+    .AddSingleton<IBoardService, BoardService>()
+    .AddSingleton<IBoardProcessingService, BoardProcessingService>();
 
 //Mapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());

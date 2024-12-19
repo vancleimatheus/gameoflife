@@ -21,7 +21,7 @@ public class BoardController(IBoardService boardService, ILogger<BoardController
         if (!ValidId(id))
             return BadRequest("Please enter a valid id");
 
-        IBoard? board = await boardService.GetBoard(id);
+        IBoard? board = await boardService.GetBoardAsync(id);
 
         return board != null
             ? Ok(mapper.Map<BoardDTO>(board))
@@ -45,7 +45,7 @@ public class BoardController(IBoardService boardService, ILogger<BoardController
         if (iterations < 0)
             return BadRequest();
 
-        var processedBoard = await boardService.ProcessNextGeneration(id, iterations, finalState);
+        var processedBoard = await boardService.ProcessNextGenerationAsync(id, iterations, finalState);
 
         if (processedBoard == null)
             return new UnprocessableEntityObjectResult($"The board didn't reach a final state in {iterations} iterations and was not updated.");
@@ -71,7 +71,7 @@ public class BoardController(IBoardService boardService, ILogger<BoardController
         if (string.IsNullOrWhiteSpace(board))
             return BadRequest("No board was provided");
 
-        IBoard? savedBoard = await boardService.SaveBoard(board);
+        IBoard? savedBoard = await boardService.SaveBoardAsync(board);
 
         return savedBoard != null
             ? Ok(mapper.Map<BoardDTO>(savedBoard))

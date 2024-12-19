@@ -2,8 +2,8 @@
 
 namespace GameOfLifeAPI.Repository;
 
-public interface IRepository
+public interface IBoardRepository
 {
     Task SaveAsync(IIdEntity entity);
-    Task<IBoard?> GetBoardByIdAsync(Guid id);
+    Task<IBoard?> GetByIdAsync(Guid id);
 }

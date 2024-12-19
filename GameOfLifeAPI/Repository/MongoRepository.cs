@@ -4,12 +4,12 @@ using GameOfLifeAPI.Models;
 
 namespace GameOfLifeAPI.Repository;
 
-public class MongoRepository : IRepository
+public class BoardRepository : IBoardRepository
 {
     private readonly IMongoCollection<MongoBoard> _boardCollection;
     private readonly IMapper mapper;
 
-    public MongoRepository(IMapper mapper)
+    public BoardRepository(IMapper mapper)
     {
         var connectionString = "mongodb://host.docker.internal:27017";
         var databaseName = "BoardDatabase";
@@ -37,7 +37,7 @@ public class MongoRepository : IRepository
                 new ReplaceOptions { IsUpsert = true });
     }
 
-    public async Task<IBoard?> GetBoardByIdAsync(Guid id)
+    public async Task<IBoard?> GetByIdAsync(Guid id)
     {
         var filter = Builders<MongoBoard>.Filter.Eq(b => b.Id, id);
         return await _boardCollection.Find(filter).FirstOrDefaultAsync();
