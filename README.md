@@ -23,7 +23,7 @@ _Constraints:_
 
 This is a code test repository and to run it properly you're going to need a few pre-requisites
 
-1. Docker Desktop
+1. Docker Desktop (https://www.docker.com/products/docker-desktop/)
 2. Build & Run MongoDB container by running the following commands
 
 ```
@@ -40,5 +40,9 @@ $> docker run -d -p 27017:27017 --name test-mongo mongo:latest
 - Be sure that MongoDB container is up and running
 - Run the solution and you should see the swagger page for the API:
 
-
 ![](assets/swagger.png)
+
+- Create a few boards by using the method `POST`
+- Some samples: `------|--*---|-**---|------` , `------|--***-|------`
+- Play with the `PUT` method to advance the board state
+- To browse data directly from the database I would recommend using MongoDB Compass (https://www.mongodb.com/try/download/compass)
